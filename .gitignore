@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+
+# Claude Code / editor config (local, not part of the project)
+.claude/
+
+# Windows folder metadata
+desktop.ini
+
+# Duplicate image files staged in the project root before being moved into
+# assets/ — the app only reads from assets/, these are redundant.
+/HURTADO.png
+/MARIN.png
+/PAREJO.png
+/bandera_colombia.png
+/banrep_logo.png
+/un_logo.png
+
+# Logs
+*.log

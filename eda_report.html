@@ -1,0 +1,741 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EDA - Mercado laboral colombiano</title>
+<style>
+  :root {
+    --bg: #0e1219;
+    --card: #161c27;
+    --card-2: #1b2230;
+    --border: #262e3d;
+    --text: #e8ebf1;
+    --sub: #97a1b6;
+    --pastel-blue: #8fb8e6;
+    --pastel-blue-a: rgba(143,184,230,.22);
+    --pastel-red: #e6a3a3;
+    --pastel-red-a: rgba(230,163,163,.22);
+    --pastel-green: #a3d9b8;
+    --pastel-green-a: rgba(163,217,184,.22);
+    --pastel-purple: #c3b3e0;
+    --pastel-purple-a: rgba(195,179,224,.22);
+    --pastel-amber: #e8cf9c;
+    --grid: #262e3d;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: 'Segoe UI', Inter, Arial, sans-serif; line-height: 1.6;
+  }
+  header {
+    background: #090c12; border-bottom: 3px solid var(--pastel-blue);
+    position: sticky; top: 0; z-index: 20;
+  }
+  .header-inner {
+    max-width: 1080px; margin: 0 auto; padding: 20px 28px;
+    display: flex; align-items: center; justify-content: space-between; gap: 20px;
+  }
+  header h1 { margin: 0; font-size: 20px; letter-spacing: .3px; color: var(--text); }
+  header p { margin: 4px 0 0; color: var(--sub); font-size: 12.5px; }
+  .logo-badge {
+    background: #fff; border-radius: 10px; padding: 8px 16px;
+    display: flex; align-items: center; min-width: 64px; min-height: 40px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.35);
+  }
+  .logo-badge img { max-height: 40px; max-width: 180px; display: block; }
+
+  main { max-width: 1080px; margin: 0 auto; padding: 26px 28px 70px; }
+  section {
+    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+    padding: 22px 26px; margin-bottom: 24px; box-shadow: 0 2px 10px rgba(0,0,0,.25);
+  }
+  h2 {
+    font-size: 14.5px; text-transform: uppercase; letter-spacing: .6px;
+    color: var(--pastel-blue); border-bottom: 1px solid var(--border);
+    padding-bottom: 10px; margin: 0 0 16px;
+  }
+  h3.chart-title { font-size: 13px; color: var(--text); margin: 0 0 10px; font-weight: 600; }
+  p { color: var(--sub); font-size: 13.5px; }
+  code { background: var(--card-2); color: var(--pastel-blue); padding: 1px 6px; border-radius: 4px; font-size: 12px; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 12.5px; margin: 8px 0 4px; }
+  th, td { padding: 7px 10px; border-bottom: 1px solid var(--border); text-align: right; color: var(--text); }
+  th:first-child, td:first-child { text-align: left; }
+  th { background: var(--card-2); text-transform: uppercase; font-size: 10.5px; letter-spacing: .4px; color: var(--sub); }
+  tr:hover td { background: var(--card-2); }
+
+  .kpis { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 4px; }
+  .kpi { flex: 1; min-width: 150px; border-left: 4px solid var(--pastel-blue); background: var(--card-2); border-radius: 8px; padding: 14px 16px; }
+  .kpi b { display: block; font-size: 21px; color: var(--text); }
+  .kpi span { font-size: 10.5px; text-transform: uppercase; color: var(--sub); letter-spacing: .5px; }
+  .kpi.green { border-left-color: var(--pastel-green); }
+  .kpi.red { border-left-color: var(--pastel-red); }
+  .kpi.amber { border-left-color: var(--pastel-amber); }
+
+  .tag { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 2px 10px; border-radius: 20px; }
+  .tag-si { background: var(--pastel-green-a); color: var(--pastel-green); }
+  .tag-no { background: var(--pastel-red-a); color: var(--pastel-red); }
+
+  .findings li { margin-bottom: 10px; font-size: 13.5px; color: var(--text); }
+  .note {
+    background: var(--card-2); border-left: 4px solid var(--pastel-blue);
+    border-radius: 0 8px 8px 0; padding: 10px 16px; font-size: 12.5px; color: var(--sub); margin-top: 12px;
+  }
+
+  /* ── Chart cards ─────────────────────────────────────────────────────── */
+  .chart-card { position: relative; margin-bottom: 22px; }
+  .chart-card:last-child { margin-bottom: 0; }
+  .chart-plot { width: 100%; }
+
+  .info-fab {
+    position: absolute; bottom: 10px; right: 10px; width: 32px; height: 32px;
+    border-radius: 50%; border: 1px solid var(--border); background: var(--card-2);
+    color: var(--pastel-blue); font-weight: 700; font-size: 13px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,.35); transition: transform .15s, background .15s;
+    z-index: 5;
+  }
+  .info-fab:hover { transform: scale(1.08); background: var(--pastel-blue-a); }
+
+  .info-pop {
+    display: none; position: absolute; bottom: 50px; right: 10px;
+    width: min(320px, 88%); background: var(--card-2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 16px; box-shadow: 0 8px 24px rgba(0,0,0,.45);
+    z-index: 6; animation: pop .15s ease;
+  }
+  .info-pop.open { display: block; }
+  .info-pop p { margin: 0; color: var(--text); font-size: 12.5px; line-height: 1.6; }
+  .info-pop .info-label {
+    display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .5px;
+    color: var(--pastel-blue); margin-bottom: 6px; font-weight: 700;
+  }
+  @keyframes pop { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  footer { text-align: center; color: var(--sub); font-size: 11.5px; padding: 20px; }
+
+  /* ── Tabs ────────────────────────────────────────────────────────────── */
+  nav.tabs {
+    background: #090c12; border-bottom: 1px solid var(--border);
+    position: sticky; top: 73px; z-index: 19;
+  }
+  .tabs-inner { max-width: 1080px; margin: 0 auto; padding: 0 28px; display: flex; gap: 4px; }
+  .tab-btn {
+    background: transparent; border: none; border-bottom: 3px solid transparent;
+    color: var(--sub); font-size: 12.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .5px; padding: 14px 18px; cursor: pointer; transition: color .15s, border-color .15s;
+    font-family: inherit;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--pastel-blue); border-bottom-color: var(--pastel-blue); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── Introducción ────────────────────────────────────────────────────── */
+  .var-def-grid { display: flex; flex-direction: column; gap: 10px; margin: 14px 0 4px; }
+  .var-def {
+    background: var(--card-2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px 16px; border-left: 4px solid var(--pastel-blue);
+  }
+  .var-def b { color: var(--text); font-size: 13px; }
+  .var-def p { margin: 4px 0 0; font-size: 12.5px; }
+  .meta-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px; margin: 14px 0;
+  }
+  .meta-item { background: var(--card-2); border-radius: 8px; padding: 10px 14px; }
+  .meta-item span { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .5px; color: var(--sub); }
+  .meta-item b { font-size: 13.5px; color: var(--text); }
+
+  /* ── Bibliografía ────────────────────────────────────────────────────── */
+  .ref-list { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; }
+  .ref-item {
+    background: var(--card-2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 14px 18px;
+  }
+  .ref-item .ref-title { color: var(--text); font-size: 13.5px; font-weight: 700; margin-bottom: 4px; }
+  .ref-item p { margin: 4px 0; }
+  .ref-item a { color: var(--pastel-blue); font-size: 12.5px; word-break: break-all; text-decoration: none; }
+  .ref-item a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div>
+      <h1>EDA - Mercado laboral colombiano</h1>
+      <p>DANE / Banco de la República · 300 obs. mensuales · ene 2001 – dic 2025 · preparación para Machine Learning</p>
+    </div>
+    <div class="logo-badge" id="logoBadge">
+      <img src="un_logo.png" alt="Universidad del Norte"
+           onerror="document.getElementById('logoBadge').style.display='none'">
+    </div>
+  </div>
+</header>
+
+<nav class="tabs">
+  <div class="tabs-inner">
+    <button class="tab-btn active" data-tab="intro" onclick="switchTab('intro')">Introducción</button>
+    <button class="tab-btn" data-tab="eda" onclick="switchTab('eda')">EDA</button>
+    <button class="tab-btn" data-tab="biblio" onclick="switchTab('biblio')">Bibliografía</button>
+  </div>
+</nav>
+
+<main>
+
+<div id="tab-intro" class="tab-panel active">
+
+<section>
+  <h2>Contexto del dataset</h2>
+  <p>Este análisis exploratorio parte de las series históricas del mercado laboral colombiano publicadas por el <b style="color:var(--text)">Departamento Administrativo Nacional de Estadística (DANE)</b> a partir de la Gran Encuesta Integrada de Hogares (GEIH), y distribuidas por el <b style="color:var(--text)">Banco de la República</b> dentro de su portal de series estadísticas históricas.</p>
+  <div class="meta-grid">
+    <div class="meta-item"><span>Periodicidad</span><b>Mensual</b></div>
+    <div class="meta-item"><span>Unidad de medida</span><b>Porcentaje (%)</b></div>
+    <div class="meta-item"><span>Fuente</span><b>DANE / Banco de la República</b></div>
+    <div class="meta-item"><span>Disponible desde</span><b>2001-01-31</b></div>
+    <div class="meta-item"><span>Disponible hasta</span><b>2025-12-31</b></div>
+    <div class="meta-item"><span>Descargado</span><b>27/02/2026</b></div>
+  </div>
+  <p>El conjunto de datos contiene 300 observaciones mensuales (25 años completos) y 6 series correspondientes a tres indicadores del mercado laboral, cada uno medido a nivel de las 13 principales áreas metropolitanas y a nivel nacional:</p>
+  <div class="var-def-grid">
+    <div class="var-def">
+      <b>Tasa Global de Participación (TGP) — 13 áreas / Nacional</b>
+      <p>Relación porcentual entre la población que integra la fuerza de trabajo y la población en edad de trabajar (PET). Refleja la presión de la PET sobre el mercado laboral.</p>
+    </div>
+    <div class="var-def">
+      <b>Tasa de Desempleo (TD) — 13 áreas / Nacional</b>
+      <p>Relación porcentual entre el número de personas desocupadas y el número de personas que integran la fuerza de trabajo (FT). Es la variable objetivo de este estudio.</p>
+    </div>
+    <div class="var-def">
+      <b>Tasa de Ocupación (TO) — 13 áreas / Nacional</b>
+      <p>Relación porcentual entre la población ocupada y la población en edad de trabajar (PET).</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Interpretación preliminar</h2>
+  <p>El mercado laboral colombiano es un indicador central del desempeño económico del país: refleja tanto la capacidad de la economía para generar empleo como la presión que ejerce la población en edad de trabajar sobre ese mercado. Las tres tasas que componen este dataset —participación, desempleo y ocupación— están matemáticamente relacionadas (la PET se reparte entre fuerza de trabajo e inactivos, y la fuerza de trabajo entre ocupados y desocupados), por lo que es esperable observar una fuerte correlación negativa entre desempleo y ocupación, y una relación más débil con la participación.</p>
+  <p>Una primera revisión de los datos (desarrollada en la pestaña EDA) muestra que la tasa de desempleo nacional se ha movido históricamente entre 7% y 22%, con una media de 11.6%. El episodio más disruptivo del periodo es, sin sorpresa, la pandemia de COVID-19: entre abril y julio de 2020 el desempleo superó el 20%, más de 8 puntos por encima de su media histórica, mientras la ocupación nacional cayó a su mínimo de los 25 años. Fuera de ese choque, la serie muestra una tendencia estructural a la baja entre 2001 y 2015, seguida de una relativa estabilización.</p>
+  <p>Para efectos del modelo predictivo que se construirá a futuro, este comportamiento sugiere dos cosas: (1) la serie no es estacionaria y tiene estacionalidad anual, por lo que requerirá diferenciación antes de modelarse, y (2) el periodo COVID debe tratarse explícitamente (por ejemplo, como variable dummy) en lugar de eliminarse, ya que es información real y no un error de medición.</p>
+</section>
+
+</div>
+
+<div id="tab-eda" class="tab-panel">
+
+<section>
+  <h2>1. Inspección inicial</h2>
+  <div class="kpis" id="kpiRow"></div>
+  <p id="rangoTxt"></p>
+  <h3 class="chart-title">Estadísticos descriptivos</h3>
+  <table id="descTable"><thead><tr>
+    <th>Variable</th><th>Media</th><th>DS</th><th>Min</th><th>Q1</th><th>Mediana</th><th>Q3</th><th>Max</th><th>IQR</th>
+  </tr></thead><tbody></tbody></table>
+</section>
+
+<section>
+  <h2>2. Análisis univariado — variable objetivo</h2>
+  <p id="skewTxt"></p>
+
+  <div class="chart-card">
+    <div id="chart_hist_target" class="chart-plot"></div>
+    <button class="info-fab" data-target="info_hist_target" onclick="toggleInfo(this)">i</button>
+    <div class="info-pop" id="info_hist_target">
+      <span class="info-label">Interpretación</span>
+      <p>La distribución del desempleo nacional tiene sesgo positivo: la mayoría de los meses se concentra entre 9% y 13%, con una cola larga hacia valores altos causada por los picos de 2020. La media (11.6%) queda por encima de la mediana (11.2%), típico cuando hay eventos extremos ocasionales.</p>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div id="chart_box_target" class="chart-plot"></div>
+    <button class="info-fab" data-target="info_box_target" onclick="toggleInfo(this)">i</button>
+    <div class="info-pop" id="info_box_target">
+      <span class="info-label">Interpretación</span>
+      <p>El rango intercuartílico va de 9.7% a 12.9%. Los puntos fuera de los bigotes son 5 observaciones: enero de 2002 y cuatro meses de 2020, coincidiendo con el choque del COVID-19. Se conservan por ser información real del mercado laboral.</p>
+    </div>
+  </div>
+
+  <h3 class="chart-title">Boxplots por indicador</h3>
+  <div class="chart-card">
+    <div id="chart_box_allvars" class="chart-plot"></div>
+    <button class="info-fab" data-target="info_box_allvars" onclick="toggleInfo(this)">i</button>
+    <div class="info-pop" id="info_box_allvars">
+      <span class="info-label">Interpretación</span>
+      <p>Las tasas de ocupación y participación (42–72%) tienen escalas mucho más altas que las de desempleo (7–26%), aunque todas se miden en porcentaje. La dispersión es similar entre las variables de área y las nacionales del mismo indicador.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>3. Bivariado y multicolinealidad</h2>
+
+  <div class="chart-card">
+    <div id="chart_corr" class="chart-plot"></div>
+    <button class="info-fab" data-target="info_corr" onclick="toggleInfo(this)">i</button>
+    <div class="info-pop" id="info_corr">
+      <span class="info-label">Interpretación</span>
+      <p>Las correlaciones más fuertes se dan entre los pares área/nacional del mismo indicador (&gt;0.94), lo que sugiere redundancia. El desempleo nacional correlaciona negativamente con la ocupación (-0.82) y débilmente con la participación (-0.24).</p>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div id="chart_vif" class="chart-plot"></div>
+    <button class="info-fab" data-target="info_vif" onclick="toggleInfo(this)">i</button>
+    <div class="info-pop" id="info_vif">
+      <span class="info-label">Interpretación</span>
+      <p>Todas las variables predictoras superan el umbral VIF=10 (escala logarítmica), lo que confirma multicolinealidad severa. <code>tasa_ocupacion_area</code> es la más redundante (VIF≈959) — antes de un modelo lineal conviene eliminar duplicados o aplicar reducción de dimensionalidad.</p>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div id="chart_scatter_feature" class="chart-plot"></div>
+    <button class="info-fab" data-target="info_scatter" onclick="toggleInfo(this)">i</button>
+    <div class="info-pop" id="info_scatter">
+      <span class="info-label">Interpretación</span>
+      <p>Usa el menú desplegable para cambiar de variable. La relación con la ocupación nacional es la más clara y negativa; con las tasas de participación es más difusa, ya que entrar a la fuerza laboral no siempre implica desempleo.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>4. Evolución temporal</h2>
+
+  <div class="chart-card">
+    <div id="chart_evolucion" class="chart-plot"></div>
+    <button class="info-fab" data-target="info_evolucion" onclick="toggleInfo(this)">i</button>
+    <div class="info-pop" id="info_evolucion">
+      <span class="info-label">Interpretación</span>
+      <p>Desempleo y ocupación nacional se mueven en direcciones opuestas casi todo el periodo. El quiebre más marcado ocurre en 2020 (zona sombreada): el desempleo se dispara mientras la ocupación cae abruptamente por las restricciones del COVID-19.</p>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div id="chart_box_anual_des" class="chart-plot"></div>
+    <button class="info-fab" data-target="info_anual_des" onclick="toggleInfo(this)">i</button>
+    <div class="info-pop" id="info_anual_des">
+      <span class="info-label">Interpretación</span>
+      <p>La mediana del desempleo desciende de forma sostenida entre 2001 y 2015, se estabiliza, y repunta bruscamente en 2020 antes de retomar la tendencia decreciente hasta 2025.</p>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div id="chart_box_anual_ocu" class="chart-plot"></div>
+    <button class="info-fab" data-target="info_anual_ocu" onclick="toggleInfo(this)">i</button>
+    <div class="info-pop" id="info_anual_ocu">
+      <span class="info-label">Interpretación</span>
+      <p>La ocupación nacional muestra una tendencia ascendente de largo plazo, interrumpida abruptamente en 2020, con recuperación posterior hasta niveles históricamente altos en los últimos años.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>5. Estacionariedad y estacionalidad</h2>
+  <p>Prueba ADF (H0: la serie tiene raíz unitaria / no es estacionaria) aplicada a las 6 series, no solo al target.</p>
+  <table id="adfTable"><thead><tr>
+    <th>Variable</th><th>Estadístico ADF</th><th>p-valor</th><th>N lags</th><th>Estacionaria</th>
+  </tr></thead><tbody></tbody></table>
+
+  <div class="chart-card" style="margin-top:18px">
+    <div id="chart_decomp" class="chart-plot"></div>
+    <button class="info-fab" data-target="info_decomp" onclick="toggleInfo(this)">i</button>
+    <div class="info-pop" id="info_decomp">
+      <span class="info-label">Interpretación</span>
+      <p>La tendencia confirma la caída estructural del desempleo en 25 años. El componente estacional se repite cada 12 meses con amplitud estable. Los residuos se disparan en 2020, señal de que ese periodo no lo explican ni la tendencia ni la estacionalidad.</p>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div id="chart_acf_pacf" class="chart-plot"></div>
+    <button class="info-fab" data-target="info_acf" onclick="toggleInfo(this)">i</button>
+    <div class="info-pop" id="info_acf">
+      <span class="info-label">Interpretación</span>
+      <p>El ACF decae lentamente con picos en múltiplos de 12 — evidencia de no estacionariedad y estacionalidad anual. El PACF cae abruptamente tras los primeros rezagos, sugiriendo un componente autorregresivo de orden bajo una vez diferenciada la serie.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>6. Ingeniería de variables (para el modelo)</h2>
+  <p>Nuevas columnas candidatas: <code>lag1</code>, <code>lag3</code>, <code>lag6</code>, <code>lag12</code>, medias/desviaciones móviles a 3, 6 y 12 meses, <code>mes</code> (estacionalidad) y <code>covid</code> (dummy 2020-01 a 2021-06).</p>
+
+  <div class="chart-card">
+    <div id="chart_lag_corr" class="chart-plot"></div>
+    <button class="info-fab" data-target="info_lag" onclick="toggleInfo(this)">i</button>
+    <div class="info-pop" id="info_lag">
+      <span class="info-label">Interpretación</span>
+      <p>El lag de 1 mes es, por mucho, el predictor más fuerte del desempleo del mes siguiente (r=0.86). Los rezagos estacionales (6 y 12 meses) también aportan información relevante como features del modelo.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>7. Split temporal train/test</h2>
+  <div class="kpis" id="splitRow"></div>
+  <p>Corte definido por fecha (no aleatorio) — obligatorio en series de tiempo para no filtrar información futura al entrenamiento. Dataset con features exportado en <code>MLC_featured.csv</code>.</p>
+</section>
+
+<section>
+  <h2>8. Resumen de hallazgos</h2>
+  <ul class="findings">
+    <li>Dataset completo, sin nulos ni duplicados — 300 obs. mensuales, ene 2001 a dic 2025.</li>
+    <li>5 outliers en el target, 4 asociados al choque COVID-19 (2020) — se conservan por ser información real.</li>
+    <li>Multicolinealidad severa confirmada por VIF entre variables de área y nacional — eliminar redundantes o aplicar PCA antes de modelos lineales.</li>
+    <li>Ninguna de las 6 series es estacionaria en niveles — se requiere diferenciación; la estacionalidad anual es clara en la descomposición y el ACF.</li>
+    <li>Los lags 1, 3 y 12 del target son los predictores más correlacionados — candidatos naturales de feature engineering.</li>
+    <li>Split temporal definido en 24 meses de test — usar este mismo corte o validación walk-forward al entrenar, nunca un split aleatorio.</li>
+  </ul>
+</section>
+
+</div>
+
+<div id="tab-biblio" class="tab-panel">
+
+<section>
+  <h2>Bibliografía</h2>
+  <p>Fuentes utilizadas para obtener y documentar las series del mercado laboral colombiano empleadas en este EDA.</p>
+  <div class="ref-list">
+    <div class="ref-item">
+      <div class="ref-title">Banco de la República de Colombia. (2025, 17 de julio). Series estadísticas históricas de Colombia.</div>
+      <p>Portal que recopila información histórica de series económicas de Colombia, construido con base en la compilación del Banco de 1997 y complementado con fuentes como el DANE, el Ministerio de Hacienda y el DNP. Las series están organizadas en 9 categorías; la categoría "Mercado laboral" agrupa el salario mínimo, el auxilio de transporte y los indicadores de ocupación y desempleo usados en este estudio.</p>
+      <a href="https://www.banrep.gov.co/es/estadisticas-economicas/series-estadisticas-historicas-colombia" target="_blank" rel="noopener">https://www.banrep.gov.co/es/estadisticas-economicas/series-estadisticas-historicas-colombia</a>
+    </div>
+    <div class="ref-item">
+      <div class="ref-title">Banco de la República de Colombia. (s. f.). Mercado laboral — Series históricas.</div>
+      <p>Fuente directa de descarga (hoja "Series de datos" de <code>MLC.xlsx</code>) de las seis series utilizadas en este EDA: Tasa Global de Participación, Tasa de Desempleo y Tasa de Ocupación, cada una para las 13 áreas metropolitanas y el total nacional, con periodicidad mensual desde enero de 2001. Los datos originales son producidos por el DANE a partir de la GEIH.</p>
+      <a href="https://uba.banrep.gov.co/htmlcommons/SeriesHistoricas/mercado-laboral.html" target="_blank" rel="noopener">https://uba.banrep.gov.co/htmlcommons/SeriesHistoricas/mercado-laboral.html</a>
+    </div>
+    <div class="ref-item">
+      <div class="ref-title">Departamento Administrativo Nacional de Estadística (DANE).</div>
+      <p>Entidad productora original de los indicadores del mercado laboral a partir de la Gran Encuesta Integrada de Hogares (GEIH). Sus definiciones metodológicas (TGP, TD, TO) son la base de las notas incluidas en la pestaña Introducción.</p>
+    </div>
+  </div>
+</section>
+
+</div>
+
+</main>
+
+<footer>Universidad del Norte · EDA generado localmente con Python + Plotly.js</footer>
+
+<script src="plotly.min.js"></script>
+<script src="report_data.js"></script>
+<script>
+const COLORS = {
+  blue: '#8fb8e6', blueA: 'rgba(143,184,230,.28)',
+  red: '#e6a3a3', redA: 'rgba(230,163,163,.28)',
+  green: '#a3d9b8', greenA: 'rgba(163,217,184,.28)',
+  purple: '#c3b3e0', purpleA: 'rgba(195,179,224,.28)',
+  amber: '#e8cf9c',
+  grid: '#262e3d', text: '#e8ebf1', sub: '#97a1b6', cardBg: '#1b2230',
+};
+const PLOTLY_CONFIG = { responsive: true, displaylogo: false, modeBarButtonsToRemove: ['select2d','lasso2d'] };
+
+const LABELS = {
+  tasa_global_participacion_area: 'Participación (área)',
+  tasa_global_participacion_nacional: 'Participación (nacional)',
+  tasa_desempleo_area: 'Desempleo (área)',
+  tasa_desempleo_nacional: 'Desempleo (nacional)',
+  tasa_ocupacion_area: 'Ocupación (área)',
+  tasa_ocupacion_nacional: 'Ocupación (nacional)',
+};
+function shortLabel(v) { return LABELS[v] || v; }
+
+function baseLayout(title) {
+  return {
+    title: { text: title, font: { color: COLORS.text, size: 13.5, family: 'Segoe UI, Arial' } },
+    paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+    font: { color: COLORS.sub, family: 'Segoe UI, Arial', size: 11 },
+    xaxis: { gridcolor: COLORS.grid, zerolinecolor: COLORS.grid, tickfont: { color: COLORS.sub } },
+    yaxis: { gridcolor: COLORS.grid, zerolinecolor: COLORS.grid, tickfont: { color: COLORS.sub } },
+    legend: { font: { color: COLORS.sub }, bgcolor: 'rgba(0,0,0,0)' },
+    margin: { t: 46, r: 20, b: 40, l: 50 },
+    height: 360,
+  };
+}
+
+// ── Info popovers ───────────────────────────────────────────────────────
+function toggleInfo(btn) {
+  const id = btn.dataset.target;
+  const pop = document.getElementById(id);
+  const isOpen = pop.classList.contains('open');
+  document.querySelectorAll('.info-pop.open').forEach(el => el.classList.remove('open'));
+  if (!isOpen) pop.classList.add('open');
+}
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.chart-card')) {
+    document.querySelectorAll('.info-pop.open').forEach(el => el.classList.remove('open'));
+  }
+});
+
+// ── KPI / texto dinámico ─────────────────────────────────────────────────
+function fmtPct(v) { return v.toFixed(2) + '%'; }
+
+function renderKpisAndText() {
+  const target = REPORT_DATA.meta.target;
+  const d = REPORT_DATA.desc_stats[target];
+  const fechas = REPORT_DATA.fecha;
+  const vals = REPORT_DATA.series[target];
+  let minIdx = 0, maxIdx = 0;
+  vals.forEach((v, i) => { if (v < vals[minIdx]) minIdx = i; if (v > vals[maxIdx]) maxIdx = i; });
+
+  document.getElementById('kpiRow').innerHTML = `
+    <div class="kpi"><span>Desempleo promedio</span><b>${fmtPct(d.mean)}</b></div>
+    <div class="kpi green"><span>Mínimo histórico</span><b>${fmtPct(vals[minIdx])}</b><span>${fechas[minIdx]}</span></div>
+    <div class="kpi red"><span>Máximo histórico</span><b>${fmtPct(vals[maxIdx])}</b><span>${fechas[maxIdx]}</span></div>
+    <div class="kpi amber"><span>Observaciones</span><b>${REPORT_DATA.meta.n}</b><span>${REPORT_DATA.meta.fecha_min} — ${REPORT_DATA.meta.fecha_max}</span></div>
+  `;
+  document.getElementById('rangoTxt').textContent =
+    `Rango: ${REPORT_DATA.meta.fecha_min} → ${REPORT_DATA.meta.fecha_max}. Sin valores faltantes ni fechas duplicadas, orden cronológico verificado.`;
+  document.getElementById('skewTxt').innerHTML =
+    `Skewness: <code>${REPORT_DATA.target_stats.skew}</code> &nbsp; Kurtosis: <code>${REPORT_DATA.target_stats.kurtosis}</code> — distribución con sesgo positivo (cola hacia valores altos de desempleo).`;
+
+  const tbody = document.querySelector('#descTable tbody');
+  const order = [target, ...REPORT_DATA.meta.features];
+  tbody.innerHTML = order.map(v => {
+    const s = REPORT_DATA.desc_stats[v];
+    return `<tr><td>${shortLabel(v)}</td><td>${s.mean}</td><td>${s.std}</td><td>${s.min}</td><td>${s.q1}</td><td>${s.median}</td><td>${s.q3}</td><td>${s.max}</td><td>${s.iqr}</td></tr>`;
+  }).join('');
+
+  const adfBody = document.querySelector('#adfTable tbody');
+  adfBody.innerHTML = REPORT_DATA.adf.map(r => `
+    <tr><td>${shortLabel(r.variable)}</td><td>${r.adf_stat}</td><td>${r.p_value}</td><td>${r.n_lags}</td>
+    <td><span class="tag ${r.stationary ? 'tag-si' : 'tag-no'}">${r.stationary ? 'Sí' : 'No'}</span></td></tr>
+  `).join('');
+
+  const tt = REPORT_DATA.train_test;
+  document.getElementById('splitRow').innerHTML = `
+    <div class="kpi"><span>Train</span><b>${tt.train_n} obs.</b><span>${tt.train_start} → ${tt.train_end}</span></div>
+    <div class="kpi amber"><span>Test</span><b>${tt.test_n} obs.</b><span>${tt.test_start} → ${tt.test_end}</span></div>
+  `;
+}
+
+// ── Gráficos ──────────────────────────────────────────────────────────────
+function chartHistTarget() {
+  const target = REPORT_DATA.meta.target;
+  const vals = REPORT_DATA.series[target];
+  const d = REPORT_DATA.desc_stats[target];
+  const trace = { x: vals, type: 'histogram', nbinsx: 28, name: 'Frecuencia',
+    marker: { color: COLORS.blueA, line: { color: COLORS.blue, width: 1 } } };
+  const layout = baseLayout('Distribución — Desempleo Nacional');
+  layout.shapes = [
+    { type: 'line', x0: d.mean, x1: d.mean, y0: 0, y1: 1, yref: 'paper', line: { color: COLORS.red, dash: 'dash', width: 2 } },
+    { type: 'line', x0: d.median, x1: d.median, y0: 0, y1: 1, yref: 'paper', line: { color: COLORS.green, dash: 'dash', width: 2 } },
+  ];
+  layout.annotations = [
+    { x: d.mean, y: 1.1, yref: 'paper', text: 'Media', showarrow: false, font: { color: COLORS.red, size: 10 } },
+    { x: d.median, y: 1.18, yref: 'paper', text: 'Mediana', showarrow: false, font: { color: COLORS.green, size: 10 } },
+  ];
+  layout.showlegend = false;
+  Plotly.newPlot('chart_hist_target', [trace], layout, PLOTLY_CONFIG);
+}
+
+function chartBoxTarget() {
+  const target = REPORT_DATA.meta.target;
+  const trace = { y: REPORT_DATA.series[target], type: 'box', name: shortLabel(target),
+    marker: { color: COLORS.red, size: 4 }, line: { color: COLORS.blue, width: 2 }, fillcolor: COLORS.blueA, boxpoints: 'outliers' };
+  const layout = baseLayout('Boxplot — Desempleo Nacional'); layout.showlegend = false;
+  Plotly.newPlot('chart_box_target', [trace], layout, PLOTLY_CONFIG);
+}
+
+function chartBoxAllVars() {
+  const vars = [REPORT_DATA.meta.target, ...REPORT_DATA.meta.features];
+  const palette = [COLORS.red, COLORS.blue, COLORS.blue, COLORS.red, COLORS.green, COLORS.green];
+  const traces = vars.map((v, i) => ({
+    y: REPORT_DATA.series[v], type: 'box', name: shortLabel(v),
+    marker: { color: palette[i % palette.length], size: 3 },
+    line: { color: palette[i % palette.length], width: 1.5 },
+    fillcolor: palette[i % palette.length].replace(')', ',.22)').replace('rgb', 'rgba'),
+  }));
+  const layout = baseLayout('Distribución por indicador'); layout.showlegend = false; layout.height = 420;
+  Plotly.newPlot('chart_box_allvars', traces, layout, PLOTLY_CONFIG);
+}
+
+function chartCorr() {
+  const cm = REPORT_DATA.corr_matrix;
+  const labels = cm.vars.map(shortLabel);
+  const trace = {
+    z: cm.matrix, x: labels, y: labels, type: 'heatmap', zmin: -1, zmax: 1,
+    colorscale: [[0, '#e6a3a3'], [0.5, '#1b2230'], [1, '#8fb8e6']],
+    text: cm.matrix.map(row => row.map(v => v.toFixed(2))), texttemplate: '%{text}',
+    textfont: { color: COLORS.text, size: 10.5 }, hoverongaps: false,
+    colorbar: { tickfont: { color: COLORS.sub } },
+  };
+  const layout = baseLayout('Matriz de correlación');
+  layout.margin.l = 150; layout.height = 420;
+  layout.xaxis.tickangle = -35;
+  Plotly.newPlot('chart_corr', [trace], layout, PLOTLY_CONFIG);
+}
+
+function chartVif() {
+  const rows = [...REPORT_DATA.vif].sort((a, b) => a.vif - b.vif);
+  const trace = {
+    x: rows.map(r => r.vif), y: rows.map(r => shortLabel(r.variable)), type: 'bar', orientation: 'h',
+    marker: { color: rows.map(r => r.vif > 10 ? COLORS.red : COLORS.green) },
+    text: rows.map(r => r.vif), texttemplate: '%{text}', textposition: 'outside', textfont: { color: COLORS.sub },
+  };
+  const layout = baseLayout('VIF — Multicolinealidad (escala log)');
+  layout.xaxis.type = 'log'; layout.xaxis.title = 'VIF';
+  layout.margin.l = 190;
+  layout.shapes = [{ type: 'line', x0: 10, x1: 10, y0: 0, y1: 1, yref: 'paper', line: { color: COLORS.amber, dash: 'dot', width: 2 } }];
+  layout.annotations = [{ x: Math.log10(10), y: 1.08, yref: 'paper', text: 'Umbral VIF = 10', showarrow: false, font: { color: COLORS.amber, size: 10 } }];
+  Plotly.newPlot('chart_vif', [trace], layout, PLOTLY_CONFIG);
+}
+
+function chartScatterFeature() {
+  const target = REPORT_DATA.meta.target;
+  const feats = REPORT_DATA.meta.features;
+  const traces = feats.map((f, i) => ({
+    x: REPORT_DATA.series[f], y: REPORT_DATA.series[target], mode: 'markers', type: 'scatter',
+    marker: { color: COLORS.blue, opacity: 0.6, size: 6 }, visible: i === 0, name: shortLabel(f),
+  }));
+  const buttons = feats.map((f, i) => ({
+    method: 'update',
+    args: [{ visible: feats.map((_, j) => j === i) },
+           { title: { text: `${shortLabel(f)} vs ${shortLabel(target)}`, font: { color: COLORS.text, size: 13.5 } },
+             'xaxis.title.text': shortLabel(f) }],
+    label: shortLabel(f),
+  }));
+  const layout = baseLayout(`${shortLabel(feats[0])} vs ${shortLabel(target)}`);
+  layout.xaxis.title = { text: shortLabel(feats[0]), font: { color: COLORS.sub } };
+  layout.yaxis.title = { text: shortLabel(target), font: { color: COLORS.sub } };
+  layout.showlegend = false;
+  layout.updatemenus = [{
+    buttons, direction: 'down', x: 1, xanchor: 'right', y: 1.24, yanchor: 'top',
+    bgcolor: COLORS.cardBg, bordercolor: COLORS.grid, font: { color: COLORS.text, size: 11 },
+  }];
+  Plotly.newPlot('chart_scatter_feature', traces, layout, PLOTLY_CONFIG);
+}
+
+function chartEvolucion() {
+  const target = REPORT_DATA.meta.target;
+  const traces = [
+    { x: REPORT_DATA.fecha, y: REPORT_DATA.series[target], type: 'scatter', mode: 'lines', name: 'Desempleo', line: { color: COLORS.red, width: 2 } },
+    { x: REPORT_DATA.fecha, y: REPORT_DATA.series['tasa_ocupacion_nacional'], type: 'scatter', mode: 'lines', name: 'Ocupación', line: { color: COLORS.blue, width: 2 } },
+  ];
+  const layout = baseLayout('Evolución temporal — Desempleo vs Ocupación Nacional');
+  layout.shapes = [{ type: 'rect', x0: '2020-01-01', x1: '2021-06-01', y0: 0, y1: 1, yref: 'paper', fillcolor: COLORS.sub, opacity: 0.12, line: { width: 0 } }];
+  layout.annotations = [{ x: '2020-04-01', y: 0.95, yref: 'paper', text: 'COVID-19', showarrow: false, font: { color: COLORS.sub, size: 11 } }];
+  Plotly.newPlot('chart_evolucion', traces, layout, PLOTLY_CONFIG);
+}
+
+function chartBoxAnual(divId, variable, color, title) {
+  const trace = {
+    x: REPORT_DATA.anio.map(String), y: REPORT_DATA.series[variable], type: 'box',
+    marker: { color, size: 3 }, line: { color, width: 1.5 }, fillcolor: color.startsWith('#')
+      ? `rgba(${parseInt(color.slice(1,3),16)},${parseInt(color.slice(3,5),16)},${parseInt(color.slice(5,7),16)},.22)` : color,
+  };
+  const layout = baseLayout(title); layout.showlegend = false; layout.xaxis.type = 'category';
+  Plotly.newPlot(divId, [trace], layout, PLOTLY_CONFIG);
+}
+
+function chartDecomp() {
+  const d = REPORT_DATA.decomposition;
+  const traces = [
+    { x: d.fecha, y: d.observed, type: 'scatter', mode: 'lines', name: 'Observado', line: { color: COLORS.blue, width: 1.6 }, xaxis: 'x', yaxis: 'y' },
+    { x: d.fecha, y: d.trend, type: 'scatter', mode: 'lines', name: 'Tendencia', line: { color: COLORS.green, width: 1.6 }, xaxis: 'x2', yaxis: 'y2' },
+    { x: d.fecha, y: d.seasonal, type: 'scatter', mode: 'lines', name: 'Estacional', line: { color: COLORS.purple, width: 1.2 }, xaxis: 'x3', yaxis: 'y3' },
+    { x: d.fecha, y: d.resid, type: 'scatter', mode: 'lines', name: 'Residuo', line: { color: COLORS.red, width: 1.2 }, xaxis: 'x4', yaxis: 'y4' },
+  ];
+  const layout = baseLayout('Descomposición multiplicativa — Desempleo Nacional');
+  layout.grid = { rows: 4, columns: 1, pattern: 'independent', roworder: 'top to bottom' };
+  layout.height = 680; layout.showlegend = false;
+  ['', '2', '3', '4'].forEach((s) => {
+    layout['xaxis' + s] = { gridcolor: COLORS.grid, tickfont: { color: COLORS.sub, size: 9 } };
+    layout['yaxis' + s] = { gridcolor: COLORS.grid, tickfont: { color: COLORS.sub, size: 9 } };
+  });
+  layout.annotations = [
+    { text: 'Observado', x: 0, xref: 'paper', xanchor: 'left', y: 1.0, yref: 'paper', showarrow: false, font: { color: COLORS.blue, size: 10.5 } },
+    { text: 'Tendencia', x: 0, xref: 'paper', xanchor: 'left', y: 0.72, yref: 'paper', showarrow: false, font: { color: COLORS.green, size: 10.5 } },
+    { text: 'Estacional', x: 0, xref: 'paper', xanchor: 'left', y: 0.46, yref: 'paper', showarrow: false, font: { color: COLORS.purple, size: 10.5 } },
+    { text: 'Residuo', x: 0, xref: 'paper', xanchor: 'left', y: 0.20, yref: 'paper', showarrow: false, font: { color: COLORS.red, size: 10.5 } },
+  ];
+  Plotly.newPlot('chart_decomp', traces, layout, PLOTLY_CONFIG);
+}
+
+function chartAcfPacf() {
+  const n = REPORT_DATA.meta.n;
+  const band = 1.96 / Math.sqrt(n);
+  const acfD = REPORT_DATA.acf, pacfD = REPORT_DATA.pacf;
+  const traces = [
+    { x: acfD.lags, y: acfD.values, type: 'bar', name: 'ACF', marker: { color: COLORS.blue }, xaxis: 'x', yaxis: 'y' },
+    { x: pacfD.lags, y: pacfD.values, type: 'bar', name: 'PACF', marker: { color: COLORS.green }, xaxis: 'x2', yaxis: 'y2' },
+  ];
+  const layout = baseLayout('Serie diferenciada — ACF y PACF (36 rezagos)');
+  layout.grid = { rows: 2, columns: 1, pattern: 'independent' };
+  layout.height = 480; layout.showlegend = false;
+  ['', '2'].forEach((s) => {
+    layout['xaxis' + s] = { gridcolor: COLORS.grid, tickfont: { color: COLORS.sub, size: 9 } };
+    layout['yaxis' + s] = { gridcolor: COLORS.grid, tickfont: { color: COLORS.sub, size: 9 } };
+  });
+  layout.shapes = ['y', 'y2'].flatMap((yref, i) => {
+    const xref = i === 0 ? 'x' : 'x2';
+    return [
+      { type: 'line', x0: 0, x1: acfD.lags.length - 1, y0: band, y1: band, xref, yref, line: { color: COLORS.sub, dash: 'dot', width: 1 } },
+      { type: 'line', x0: 0, x1: acfD.lags.length - 1, y0: -band, y1: -band, xref, yref, line: { color: COLORS.sub, dash: 'dot', width: 1 } },
+    ];
+  });
+  layout.annotations = [
+    { text: 'ACF', x: 0, xref: 'paper', xanchor: 'left', y: 1.0, yref: 'paper', showarrow: false, font: { color: COLORS.blue, size: 10.5 } },
+    { text: 'PACF', x: 0, xref: 'paper', xanchor: 'left', y: 0.42, yref: 'paper', showarrow: false, font: { color: COLORS.green, size: 10.5 } },
+  ];
+  Plotly.newPlot('chart_acf_pacf', traces, layout, PLOTLY_CONFIG);
+}
+
+function chartLagCorr() {
+  const rows = REPORT_DATA.lag_corr;
+  const trace = { x: rows.map(r => `lag ${r.lag}`), y: rows.map(r => r.corr), type: 'bar',
+    marker: { color: COLORS.purple }, text: rows.map(r => r.corr), textposition: 'outside', textfont: { color: COLORS.sub } };
+  const layout = baseLayout('Correlación del target con sus rezagos'); layout.showlegend = false;
+  Plotly.newPlot('chart_lag_corr', [trace], layout, PLOTLY_CONFIG);
+}
+
+// ── Tabs ─────────────────────────────────────────────────────────────────
+const CHART_IDS = [
+  'chart_hist_target', 'chart_box_target', 'chart_box_allvars', 'chart_corr', 'chart_vif',
+  'chart_scatter_feature', 'chart_evolucion', 'chart_box_anual_des', 'chart_box_anual_ocu',
+  'chart_decomp', 'chart_acf_pacf', 'chart_lag_corr',
+];
+let edaInitialized = false;
+
+function initEdaCharts() {
+  renderKpisAndText();
+  chartHistTarget();
+  chartBoxTarget();
+  chartBoxAllVars();
+  chartCorr();
+  chartVif();
+  chartScatterFeature();
+  chartEvolucion();
+  chartBoxAnual('chart_box_anual_des', REPORT_DATA.meta.target, COLORS.red, 'Desempleo — Distribución anual');
+  chartBoxAnual('chart_box_anual_ocu', 'tasa_ocupacion_nacional', COLORS.blue, 'Ocupación — Distribución anual');
+  chartDecomp();
+  chartAcfPacf();
+  chartLagCorr();
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab-panel').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.querySelector(`.tab-btn[data-tab="${name}"]`).classList.add('active');
+
+  if (name === 'eda') {
+    if (!edaInitialized) {
+      initEdaCharts();
+      edaInitialized = true;
+    } else {
+      requestAnimationFrame(() => {
+        CHART_IDS.forEach(id => {
+          const el = document.getElementById(id);
+          if (el && el.data) Plotly.Plots.resize(id);
+        });
+      });
+    }
+  }
+  document.querySelectorAll('.info-pop.open').forEach(el => el.classList.remove('open'));
+}
+</script>
+</body>
+</html>
