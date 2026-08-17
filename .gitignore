@@ -19,3 +19,7 @@ desktop.ini
 
 # Logs
 *.log
+
+# Convenience zip for uploading the LaTeX sources to Overleaf — duplicates
+# main.tex + eda_ml_figs/ + assets/, which are already tracked individually.
+/latex_project.zip
